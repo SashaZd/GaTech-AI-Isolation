@@ -1,0 +1,36 @@
+#chess {
+    width: 640px;
+    height: 640px;
+    margin: 0.5em;
+    border: 2px solid #808080;
+}
+
+#chess div {
+    float: left;
+    width: 80px;
+    height: 80px;
+    background-color: #fff;
+    text-align: center;
+}
+
+.playerMove  { 
+	color: green;
+	font-size: 30;
+	position: relative;
+	display: block;
+	vertical-align: middle;
+	line-height: 80px;
+}
+
+#chess div:nth-child(-2n+8), 
+#chess div:nth-child(8) ~ div:nth-child(-2n+15), 
+#chess div:nth-child(16) ~ div:nth-child(-2n+24), 
+#chess div:nth-child(24) ~ div:nth-child(-2n+31), 
+#chess div:nth-child(32) ~ div:nth-child(-2n+40), 
+#chess div:nth-child(40) ~ div:nth-child(-2n+47), 
+#chess div:nth-child(48) ~ div:nth-child(-2n+56), 
+#chess div:nth-child(56) ~ div:nth-child(-2n+63) {
+    background-color: #000;
+    color: white;
+}
+
