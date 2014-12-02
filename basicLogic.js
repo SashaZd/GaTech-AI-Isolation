@@ -2,82 +2,72 @@
 
 var ERR1 = 0;		//If the square has been filled before and the user keeps clicking it. 
 var TURN = 0;
-var sow = new Array(64);
-for (var i = sow.length - 1; i >= 0; i--) {
-	sow[i] = "";
-};
+
+
+var EARLIER_POS = [], CURRENT_POS = [];
+for(var i=0;i<3; i++){ 
+	EARLIER_POS[i]=-1; CURRENT_POS[i]==-1;
+}
 
 ////////////////////////////
 
-function print_sow () {
-	for (var i = 0; i < sow.length; i++) {
-		if (sow[i]!="") {
-			console.log(i + " : " + sow[i])
+function convertToRowCol (index) {
+	var count=-1;
+	for(var i=0; i<8; i++){
+		for(var j=0; j<8; j++){
+			count++;
+			if(count == index){
+				return [i, j];
+			}
 		}
-	};
+	}
 }
 
-function whoseTurn (index, el) {
+function convertToIndex (row, col) {
+	var count=-1;
+	for(var i=0; i<8; i++){
+		for(var j=0; j<8; j++){
+			count++;
+			if(i==row && j==col){
+				return count;
+			}
+		}
+	}
+}
+
+
+
+function whoseTurn () {
 	//Check if Legal Move (vertically, horizontally or diagonally)
-
-
 	//If Legal What To Print 
-	 
+
 	switch(TURN%3){
 		case 0 : 
-			sow[index]="X";
 			return "X";
 		case 1 : 
-			sow[index]="O";
 			return "O";
 		case 2 : 
-			sow[index]="V";
 			return "V";
 	}
 }
 
-function checkIfLegal (el,index) {
-	
-	//for horizontal possible moves... 
-	
-	var hDiff = (index%8);
-
-	var fromHDiff = index-hDiff; 
-	var toHDiff = index+7-hDiff;
-
-	// //Flash Legal Horizontal Moves
-	// console.log(fromHDiff + " --- " + index + " --- " + toHDiff);
-	
-	// //iterating through all the squares
-	// $("#chess div").text(function(index2){
-	// 	if (index2 == index){
-			
-	// 	}
-	// 	else {
-	// 		if (index2 >= fromHDiff && index2 <= toHDiff){
-	// 			return "legal";
-	// 		}
-	// 	}
-	// });
-	// setTimeout(function(){
-	// 	$("#chess div").text(function(index2){
-	// 		if (index2 == index){
-				
-	// 		}
-	// 		else {
-	// 			if (index2 >= fromHDiff && index2 <= toHDiff){
-	// 				return "";
-	// 			}
-	// 		}
-	// 	});
-	// }, 3000);
-	
-
-	
-
-	
-
-	//for vertical possible moves...
+function checkIfLegal (index, turnVal) {
+	var x1, x2, y1, y2;
+	switch(turnVal){
+		case "X":
+			[x1, y1] = convertToRowCol(EARLIER_POS[0]);
+			[x2, y2] = convertToRowCol(index);
+			break;
+		case "O":
+			[x1, y1] = convertToRowCol(EARLIER_POS[1]);
+			[x2, y2] = convertToRowCol(index);
+			break;
+		case "V":
+			[x1, y1] = convertToRowCol(EARLIER_POS[2]);
+			[x2, y2] = convertToRowCol(index);
+			break;
+	}
+	console.log(x1, y1, " --- ", x2, y2);
 
 	return true
 }
@@ -124,24 +114,40 @@ $(document).ready(function() {
 		var index = $("#chess div").index(this);
 
 		if(checkIfEmpty(this, index)){
+			var turnVal = whoseTurn();					//check whose turn it is
 
-			//iterating through all the squares
-			$("#chess div").text(function(index2){
+			if(checkIfLegal(index, turnVal)){
+			
+				//marks the cell with X/O/V and crosses out old cells
+				$("#chess div").text(function(index2){			//iterating through all the squares
+					if (index2 == index){						//if the sq == the sq that was clicked on, then increment the turn, and print X/O/V
+						TURN += 1;
 
-				//check whose turn it is
-				var turnVal = whoseTurn(index, this);
+						switch(turnVal){
+							case "X":
+								CURRENT_POS[0]=index;
+								break;
+							case "O":
+								CURRENT_POS[1]=index;
+								break;
+							case "V":
+								CURRENT_POS[2]=index;
+								break;
+						}
 
-				//if the sq == the sq that was clicked on, then increment the turn, and print X/O/V
-				if (index2 == index){
-					TURN += 1;
-					return turnVal;
-				}
-				else {
 
-					//change the older X/O/V that exists to be displayed as a crossed out square
-					return changeOldSquares(index2, this, turnVal);
-				}
-			});
+						return turnVal;
+					}
+					else {
+						//change the older X/O/V that exists to be displayed as a crossed out square
+						return changeOldSquares(index2, this, turnVal);
+					}
+				});
+			}
+			else { 
+				var error = "Not a legal move. You can only move horizontally, vertically or diagonally from your current position";
+				notLegal(error);
+			}
 		}
 		else {
 			var error = "Square Filled"
