@@ -255,9 +255,18 @@ function getLegalMoves(turnVal){
 
 	previousIndex = EARLIER_POS[playerIndex];
 	legalPositions = [];
-	for(var index = 0; index < n*n; index++){
+	if (previousIndex != -1){
+		for(var index = 0; index < n*n; index++){
 		if (checkIfEmpty(index) && checkIfLegal(index,turnVal)) {
 			legalPositions[legalPositions.length] = index;
+			}
+		}	
+	}
+	else{
+		for(var index = 0; index < n*n; index++){
+		if (checkIfEmpty(index)) {
+			legalPositions[legalPositions.length] = index;
+			}
 		}
 	}
 
@@ -332,7 +341,7 @@ function getIndexForModellingAgent(legalMoves){
 	}
 	// console.log("Modelling Agent Heuristics: ", evalarr);
 	// console.log("Modelling Agent Diff: ", evalDiff);
-	console.log(player, "picks move with eval =", evalarr[index]);
+	//console.log(player, "picks move with eval =", evalarr[index]);
 	return index;
 }
 
@@ -459,7 +468,7 @@ function singleGameLoop(turnVal, index){
 									//Update the player model
 									var userEval = evalValueForPosition(index,turnVal);
 									averageUserModel = (averageUserModel + userEval)/2;
-									console.log(whoseTurn() ,"pics move with eval =", userEval);
+									console.log("X pics move with eval =", userEval, "ANGERAGE: ",averageUserModel);
 
 									//Make the move
 									EARLIER_POS[0] = index
@@ -527,8 +536,13 @@ $(document).ready(function() {
 		//If user made a legal move
 		if (ret != -1){
 			var next_index = getNextIndexForPlayer(1);
+			var e1 = evalValueForPosition(next_index,"O");
+			console.log("O pics move with eval =", e1);
 			singleGameLoop(player2, next_index);
+
 			next_index = getNextIndexForPlayer(2);
+			e1 = evalValueForPosition(next_index,"O");
+			console.log("V pics move with eval =", e1);
 			singleGameLoop(player3, next_index);
 		}
 		
