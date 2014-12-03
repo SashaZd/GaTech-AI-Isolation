@@ -66,6 +66,7 @@ function sleep(milliseconds) {
 ////////////////////////////
 
 //Returns string representaion of the player turn
+
 function whoseTurn () {
 	//Check if Legal Move (vertically, horizontally or diagonally)
 	//If Legal What To Print 
@@ -194,7 +195,7 @@ function notLegal (error) {
 }
 
 //Check if game is over for turnVal
-
+//Not tested
 function checkIfGameOver(turnVal,board){
 
 	
@@ -219,31 +220,31 @@ function checkIfGameOver(turnVal,board){
 		return false;
 	};
 
-	//Seems like a simple loop
-	//But hangs for some reason
+	var legalPositions = getLegalMoves(turnVal);
+	if (legalPositions.length == 0) {
 
-	// for (var i = x-1; i<x+1; i++){
-	// 	for(var j = y-1; i<y+1; j++){
-	// 		console.log("Try: ",i,j);
-	// 		if(i>=0 && i<n && j>=0 && j<n){
-	// 			console.log("Checking ", i,j,board[i][j]);
-	// 			if(board[i][j] == -1){
-	// 				//Empty space left in the immedieate vicinity
-	// 				console.log("Space in vicinity", i, j);
-	// 				return false;
-	// 			}
-	// 		}
-	// 	}
-	// }
-	
+		return true;
+	};
 
 	return false;
 
 }
 
-function getNextIndexForPlayer(playerIndex){
+function getLegalMoves(turnVal){
 
-	var turnVal = whoseTurn();
+	var playerIndex = -1; 
+	switch(turnVal){
+		case "X":
+			playerIndex = 0;
+			break;
+		case "O":
+			playerIndex = 1;
+			break;
+		case "V":
+			playerIndex = 2;
+			break;
+	}
+
 	previousIndex = EARLIER_POS[playerIndex];
 	legalPositions = [];
 	for(var index = 0; index < n*n; index++){
@@ -252,14 +253,23 @@ function getNextIndexForPlayer(playerIndex){
 		}
 	}
 
-	if (legalPositions.length == 0){
+	return legalPositions;
+}
+
+function getNextIndexForPlayer(playerIndex){
+
+	var turnVal = whoseTurn();
+	
+	var legalPositions = getLegalMoves(turnVal);
+	if (legalPositions.length == 0) {
 
 		//No more legal positions
 		//End of this player's game
 		TURN += 1;
 		console.log("Game Over for ", turnVal);
 		return -1;
-	}
+	};
+		
 	console.log(turnVal, legalPositions);
 	var index = legalPositions[Math.floor(Math.random()*legalPositions.length)];
 	console.log("AI Pickes ",index);
