@@ -3,6 +3,16 @@
 
 //////GLOBAL VARIABLES //////
 
+
+var RANDOM_AGENT = 0;
+var HEURISTIC_AGENT = 1;
+var MODELLING_AGENT = 2;
+var agent_type = -1;
+
+//AI Variables
+var averageUserModel = 50; //Average difficulty level of the player
+
+
 var n = 8;
 var board = [];
 for(var i=0; i<n; i++){
@@ -35,7 +45,6 @@ function convertToRowCol (index) {
 		for(var j=0; j<n; j++){
 			count++;
 			if(count == index){
-				//console.log(i, j);
 				var temp = []; temp[0]=i; temp[1]=j;
 				return temp;
 			}
@@ -109,7 +118,6 @@ function checkIfLegal(index, turnVal){
 		var startY = (y2>y1)?(y1+1):(y2);
 		var temp = Math.abs(y1-y2);
 		for (var i = 1, yi = startY; i<temp; i++, yi++){
-			// console.log("Check Row: ",x1,yi,checkIfEmpty(convertToIndex(x1,yi)))
 			if (!checkIfEmpty(convertToIndex(x1,yi))) {
 				return false;
 			}
@@ -186,10 +194,10 @@ function changeOldSquares (index, el, turnVal) {
 function notLegal (error) {
 	switch(error){
 		case "Square Filled":
-			console.log("Give up and try another. Don't be petty.");
+			// console.log("Give up and try another. Don't be petty.");
 			break;
 		case "Not Legal":
-			console.log("Not a legal move. You can only move horizontally, vertically or diagonally from your current position");
+			// console.log("Not a legal move. You can only move horizontally, vertically or diagonally from your current position");
 			break;
 	}
 }
@@ -199,7 +207,7 @@ function notLegal (error) {
 function checkIfGameOver(turnVal,board){
 
 	
-	console.log(turnVal);
+	// console.log(turnVal);
 	var x,y,i,j;
 	switch(turnVal){
 		case "X":
@@ -266,32 +274,178 @@ function getNextIndexForPlayer(playerIndex){
 		//No more legal positions
 		//End of this player's game
 		TURN += 1;
-		console.log("Game Over for ", turnVal);
+		// console.log("Game Over for ", turnVal);
 		return -1;
 	};
 		
-	console.log(turnVal, legalPositions);
-	var index = legalPositions[Math.floor(Math.random()*legalPositions.length)];
-	console.log("AI Pickes ",index);
+	// console.log(turnVal, legalPositions);
+	
+	var index = -1;
+	switch (agent_type){
+		case RANDOM_AGENT:
+		index = getIndexForRandomAgent(legalPositions);
+			break;
+		case HEURISTIC_AGENT:
+			break;
+		case MODELLING_AGENT:
+			index = getIndexForModellingAgent(legalPositions);
+			break;
+	}	
+
+	// console.log("AI Pickes ",index);
 	return index;
 }
+
+
+
+function getIndexForRandomAgent(legalMoves){
+	var index = legalMoves[Math.floor(Math.random()*legalMoves.length)];
+	return index;
+}
+
+
+function getIndexForHeuristicAgent(legalMoves){
+	return -1;
+}
+
+
+function getIndexForModellingAgent(legalMoves){
+	var index = -1;
+	var evalDiff = [];
+	var evalarr = []; //js for logging
+
+	var player = whoseTurn();
+	if (legalMoves.length > 0){
+		
+		var min = 0;
+		for (var i=0 ; i<legalMoves.length; i++){
+			var pos = legalMoves[i];
+			var eval = evalValueForPosition(pos, player);
+			evalarr[i] = eval;
+			evalDiff[i] = Math.abs(averageUserModel - eval);
+
+			if (i==0 || min > evalDiff[i]){
+				min = evalDiff[i];
+				index = pos;
+			}
+		}//Got minimum diff
+	}
+	// console.log("Modelling Agent Heuristics: ", evalarr);
+	// console.log("Modelling Agent Diff: ", evalDiff);
+	console.log(player, "picks move with eval =", evalarr[index]);
+	return index;
+}
+
+
+function evalValueForPosition(index, player){
+
+	var num_empty_board_positions = 0;
+	var num_my_moves = 0;
+	var num_their_moves = 0;
+
+	for(var i=0; i<n; i++){
+		for(var j=0; j<n; j++){
+			if (board[i][j] == -1)
+				num_empty_board_positions ++;
+		}
+	}
+
+	var them1 = "";
+	var them2 = "";
+	switch(player){
+		case "X":
+			them1 = "O"; 
+			them2 = "V";
+			break;
+		case "O":
+			them1 = "X"; 
+			them2 = "V";
+			break;
+		case "V":
+			them1 = "O"; 
+			them2 = "X";
+			break;
+	}
+
+
+	//Assume You made the move
+	var earlierPos = -1; //Temp store old one to reset
+	var earlierBoard = -1;
+
+	// console.log("Set to new position =", index,  " Earlier position =", earlierPos, earlierBoard);
+
+	[x,y] = convertToRowCol(index);
+	switch(player){
+		case "X":
+			earlierpos = EARLIER_POS[0];
+			earlierBoard = board[x][y];
+			EARLIER_POS[0] = index
+			board[x][y]=0;
+			break;
+		case "O":
+		earlierpos = EARLIER_POS[1];
+			earlierBoard = board[x][y];
+			EARLIER_POS[1] = index;
+			board[x][y]=1;
+			break;
+		case "V":
+		earlierpos = EARLIER_POS[2];
+			earlierBoard = board[x][y];
+			EARLIER_POS[2] = index;
+			board[x][y]=2;
+			break;
+	}
+
+
+	//My moves
+	num_my_moves = getLegalMoves(player).length;
+	num_their_moves = getLegalMoves(them1).length;
+	num_their_moves = num_their_moves + getLegalMoves(them2).length;
+
+
+	// console.log("New position =", EARLIER_POS, board);
+
+	//Reset the board
+	// EARLIER_POS = earlierPos;
+	// board = earlierBoard;
+	
+	[x,y] = convertToRowCol(index);
+	switch(player){
+		case "X":
+			EARLIER_POS[0] = earlierpos
+			board[x][y]= earlierBoard;
+			break;
+		case "O":
+			EARLIER_POS[1] = earlierpos
+			board[x][y]= earlierBoard;
+			break;
+		case "V":
+			EARLIER_POS[2] = earlierpos
+			board[x][y]= earlierBoard;
+			break;
+	}
+
+
+	// console.log("New position =", EARLIER_POS, board);
+
+	// console.log(num_empty_board_positions, num_my_moves, num_their_moves);
+	return num_empty_board_positions + num_my_moves - num_their_moves;
+}
+
 
 //Single player attempts to move to index
 function singleGameLoop(turnVal, index){
 
-	console.log(turnVal, " Turn");
+	// console.log(turnVal, " Turn");
 		//Check if game over for this turnVal
 		// if(!checkIfGameOver(turnVal,board))
 		if(!(index == -1)) //Game Over (AI)
 		{
-
 			//If game not over, check if empty and legal
 			if(checkIfEmpty(index)){
 				// tempPos = EARLIER_POS;
 					
-				if(checkIfLegal(index, turnVal)){
-					
-					
+				if(checkIfLegal(index, turnVal)){			
 					//marks the cell with X/O/V and crosses out old cells
 					$("#chess div").text(function(index2){			//iterating through all the squares
 						if (index2 == index){						//if the sq == the sq that was clicked on, then increment the turn, and print X/O/V
@@ -301,6 +455,13 @@ function singleGameLoop(turnVal, index){
 
 							switch(turnVal){
 								case "X":
+
+									//Update the player model
+									var userEval = evalValueForPosition(index,turnVal);
+									averageUserModel = (averageUserModel + userEval)/2;
+									console.log(whoseTurn() ,"pics move with eval =", userEval);
+
+									//Make the move
 									EARLIER_POS[0] = index
 									board[x][y]=0;
 									break;
@@ -313,6 +474,10 @@ function singleGameLoop(turnVal, index){
 									board[x][y]=2;
 									break;
 							}
+
+							
+
+							
 
 
 							return turnVal;			//actual marking of div done here
@@ -327,20 +492,20 @@ function singleGameLoop(turnVal, index){
 					var error = "Not Legal";
 					notLegal(error);
 					// pass;
+
+					return -1; 
 				}
 			}
 			// else 
 			{
 				var error = "Square Filled"
-				console.log("in here");
+				// console.log("in here");
 				notLegal(error);
 			}	
 		}
 		else{
-
 			TURN += 1;
-			console.log("Game Over for ", turnVal);
-
+			// console.log("Game Over for ", turnVal);
 		}
 }
 
@@ -355,12 +520,18 @@ $(document).ready(function() {
 		var player1 = "X";
 		var player2 = "O";
 		var player3 = "V";
+		agent_type = RANDOM_AGENT;
 
-		singleGameLoop(player1,index);
-		var next_index = getNextIndexForPlayer(1);
-		singleGameLoop(player2, next_index);
-		next_index = getNextIndexForPlayer(2);
-		singleGameLoop(player3, next_index);
+
+		var ret = singleGameLoop(player1,index);
+		//If user made a legal move
+		if (ret != -1){
+			var next_index = getNextIndexForPlayer(1);
+			singleGameLoop(player2, next_index);
+			next_index = getNextIndexForPlayer(2);
+			singleGameLoop(player3, next_index);
+		}
+		
 
 		
 	});
