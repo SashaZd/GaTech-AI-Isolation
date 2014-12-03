@@ -6,18 +6,25 @@ var TURN = 0;
 
 var EARLIER_POS = [], CURRENT_POS = [];
 for(var i=0;i<3; i++){ 
-	EARLIER_POS[i]=-1; CURRENT_POS[i]==-1;
+	EARLIER_POS[i]=-1; CURRENT_POS[i]=-1;
 }
 
 ////////////////////////////
 
 function convertToRowCol (index) {
 	var count=-1;
+
+	if(index == -1){
+		return [-1,-1];
+	}
+
 	for(var i=0; i<8; i++){
 		for(var j=0; j<8; j++){
 			count++;
 			if(count == index){
-				return [i, j];
+				console.log(i, j);
+				var temp = []; temp[0]=i; temp[1]=j;
+				return temp;
 			}
 		}
 	}
@@ -50,26 +57,44 @@ function whoseTurn () {
 			return "V";
 	}
 }
+var x1y1=[], x2y2=[];
+x1y1[0]=x1y1[1]=-1; x2y2[0]=x2y2[1]=-1;
 
 function checkIfLegal (index, turnVal) {
-	var x1, x2, y1, y2;
+	console.log("Inside Check Legal");
+	var legal = false;
 	switch(turnVal){
 		case "X":
-			[x1, y1] = convertToRowCol(EARLIER_POS[0]);
-			[x2, y2] = convertToRowCol(index);
+			console.log(x1y1, x2y2);
+			x1y1  = convertToRowCol(EARLIER_POS[0]);
+			x2y2 = convertToRowCol(index);
+
+			console.log(x1y1, x2y2);
 			break;
 		case "O":
-			[x1, y1] = convertToRowCol(EARLIER_POS[1]);
-			[x2, y2] = convertToRowCol(index);
+			x1y1 = convertToRowCol(EARLIER_POS[1]);
+			x2y2 = convertToRowCol(index);
 			break;
 		case "V":
-			[x1, y1] = convertToRowCol(EARLIER_POS[2]);
-			[x2, y2] = convertToRowCol(index);
+			x1y1 = convertToRowCol(EARLIER_POS[2]);
+			x2y2 = convertToRowCol(index);
 			break;
 	}
-	console.log(x1, y1, " --- ", x2, y2);
 
-	return true
+	if (x1y1[0]==-1){
+		console.log("First Move");
+		legal = true;
+	}
+	else if(x2y2[0]==x1y1[0] || x2y2[1]==x1y1[1]){
+		console.log("Is Legal");
+		legal = true;
+	}
+	else {
+		console.log(x1y1, " ------> ", x2y2);
+	}
+	console.log(x1y1, " --- ", x2y2);
+
+	return legal;
 }
 
 function checkIfEmpty(el, index) {
@@ -80,6 +105,7 @@ function checkIfEmpty(el, index) {
 		
 	}
 	else {
+		console.log("Is there a move in here");
 		return false;			//the square already has a player's move in it
 	}
 }
@@ -106,16 +132,24 @@ function notLegal (error) {
 				alert("That square has been played before! Give up and try another. Don't be petty."); ERR1 = 0;
 			}
 			break;
+		case "Not Legal":
+			alert("Not a legal move. You can only move horizontally, vertically or diagonally from your current position");
 	}
 }
 
 $(document).ready(function() {
 	$("#chess div").click(function() {
 		var index = $("#chess div").index(this);
-
+		console.log(index, " being tried");
 		if(checkIfEmpty(this, index)){
+
+			console.log("Trying to play......", index, " ---- from ----- ", EARLIER_POS)
+
 			var turnVal = whoseTurn();					//check whose turn it is
 
+			var tempPos = EARLIER_POS;
+			EARLIER_POS = CURRENT_POS;
+			
 			if(checkIfLegal(index, turnVal)){
 			
 				//marks the cell with X/O/V and crosses out old cells
@@ -125,12 +159,17 @@ $(document).ready(function() {
 
 						switch(turnVal){
 							case "X":
-								CURRENT_POS[0]=index;
+								// console.log(EARLIER_POS[0], CURRENT_POS[0]);
+								EARLIER_POS[0] = CURRENT_POS[0];
+								CURRENT_POS[0] = index;
+								// console.log(EARLIER_POS[0], CURRENT_POS[0]);
 								break;
 							case "O":
+								EARLIER_POS[1] = CURRENT_POS[1];
 								CURRENT_POS[1]=index;
 								break;
 							case "V":
+								EARLIER_POS[2] = CURRENT_POS[2];
 								CURRENT_POS[2]=index;
 								break;
 						}
@@ -145,8 +184,10 @@ $(document).ready(function() {
 				});
 			}
 			else { 
-				var error = "Not a legal move. You can only move horizontally, vertically or diagonally from your current position";
-				notLegal(error);
+				EARLIER_POS = tempPos;
+				var error = "Not Legal";
+				console.log(error);
+				// notLegal(error);
 			}
 		}
 		else {
