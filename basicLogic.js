@@ -183,7 +183,22 @@ function changeOldSquares (index, el, turnVal) {
 		// el.style.setProperty("background-color", "grey");
 		el.style.setProperty("text-decoration", "line-through");
 		el.style.fontWeight= "bold";
-		el.style.fontSize = 48;
+
+		if (el.textContent == "X"){
+			el.style.setProperty("color", "#D8F6CE");	
+			el.style.backgroundColor = "#D8F6CE";
+		}
+		else if (el.textContent == "O"){
+			el.style.setProperty("color", "#F6CECE");	
+			el.style.backgroundColor = "#F6CECE";
+		}
+		else if (el.textContent == "V"){
+			el.style.setProperty("color", "#D8CEF6");	
+			el.style.backgroundColor = "#D8CEF6";
+		}
+		
+		
+		// el.style.fontSize = 48;
 		return turnVal;
 		// return "<strike>"+turnVal+"</strike>"
 	}
@@ -283,11 +298,27 @@ function getNextIndexForPlayer(playerIndex){
 		//No more legal positions
 		//End of this player's game
 		TURN += 1;
-		// console.log("Game Over for ", turnVal);
+
+		switch(turnVal){
+			case "X":
+				document.getElementById('playerX').style.color = "grey";
+				document.getElementById('playerX').style.setProperty("text-decoration", "line-through");
+				jAlert('This is a custom alert box', 'Alert Dialog');
+				break;
+			case "O":
+				document.getElementById('playerO').style.color = "grey";
+				document.getElementById('playerO').style.setProperty("text-decoration", "line-through");
+				break;
+			case "V":
+				document.getElementById('playerV').style.color = "grey";
+				document.getElementById('playerV').style.setProperty("text-decoration", "line-through");
+				break;
+		}
+
+		
 		return -1;
 	};
 		
-	// console.log(turnVal, legalPositions);
 	
 	var index = -1;
 	switch (agent_type){
@@ -469,25 +500,27 @@ function singleGameLoop(turnVal, index){
 									var userEval = evalValueForPosition(index,turnVal);
 									averageUserModel = (averageUserModel + userEval)/2;
 									console.log("X pics move with eval =", userEval, "ANGERAGE: ",averageUserModel);
-
 									//Make the move
 									EARLIER_POS[0] = index
 									board[x][y]=0;
+									this.style.setProperty("color", "#21610B");
+									document.getElementById('x-score').innerHTML = parseInt(document.getElementById('x-score').innerHTML)+1;
+
+
 									break;
 								case "O":
 									EARLIER_POS[1] = index;
 									board[x][y]=1;
+									this.style.setProperty("color", "#8A0808");
+									document.getElementById('o-score').innerHTML = parseInt(document.getElementById('o-score').innerHTML)+1
 									break;
 								case "V":
 									EARLIER_POS[2] = index;
 									board[x][y]=2;
+									this.style.setProperty("color", "#3A01DF");
+									document.getElementById('v-score').innerHTML = parseInt(document.getElementById('v-score').innerHTML)+1
 									break;
 							}
-
-							
-
-							
-
 
 							return turnVal;			//actual marking of div done here
 						}
@@ -500,21 +533,17 @@ function singleGameLoop(turnVal, index){
 				else { 
 					var error = "Not Legal";
 					notLegal(error);
-					// pass;
-
 					return -1; 
 				}
 			}
 			// else 
 			{
 				var error = "Square Filled"
-				// console.log("in here");
 				notLegal(error);
 			}	
 		}
 		else{
 			TURN += 1;
-			// console.log("Game Over for ", turnVal);
 		}
 }
 
@@ -538,12 +567,13 @@ $(document).ready(function() {
 			var next_index = getNextIndexForPlayer(1);
 			var e1 = evalValueForPosition(next_index,"O");
 			console.log("O pics move with eval =", e1);
-			singleGameLoop(player2, next_index);
-
-			next_index = getNextIndexForPlayer(2);
-			e1 = evalValueForPosition(next_index,"O");
-			console.log("V pics move with eval =", e1);
-			singleGameLoop(player3, next_index);
+			setTimeout(function(){ 
+				singleGameLoop(player2, next_index); 
+				next_index = getNextIndexForPlayer(2);
+				e1 = evalValueForPosition(next_index,"O");
+				console.log("V pics move with eval =", e1);
+				setTimeout(function(){ singleGameLoop(player3, next_index); }, 250);
+			}, 250);
 		}
 		
 
