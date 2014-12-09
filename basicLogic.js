@@ -31,6 +31,8 @@ var HEURISTIC_AGENT = 1;
 var MODELLING_AGENT = 2;
 var agent_type = -1;
 
+var LOSERS=0;
+var xscore=0; var vscore=0; var oscore=0;
 //AI Variables
 var averageUserModel = 50; //Average difficulty level of the player
 
@@ -267,8 +269,8 @@ function checkIfGameOver(turnVal,board){
 
 	var legalPositions = getLegalMoves(turnVal);
 	if (legalPositions.length == 0) {
-
 		return true;
+		
 	};
 
 	return false;
@@ -325,15 +327,31 @@ function getNextIndexForPlayer(playerIndex){
 			case "X":
 				document.getElementById('playerX').style.color = "grey";
 				document.getElementById('playerX').style.setProperty("text-decoration", "line-through");
-				jAlert('This is a custom alert box', 'Alert Dialog');
+				alert("Game Over. You've boxed yourself in! Rate your experience.");
+
+				if(agent_type==RANDOM_AGENT){
+					var win = window.open("https://docs.google.com/forms/d/1qOql_UtjMuLeuvwUeXDTd3bF9-3MdEFOpeXTfXLBoKQ/viewform", '_blank');
+					win.focus();
+				}
+				else{
+					var win = window.open("https://docs.google.com/forms/d/1C3in9Iql5sO1L98GKPdApGSNU4sO3jqvE_HoLfMUFNU/viewform", '_blank');
+					win.focus();
+				}
+
 				break;
 			case "O":
 				document.getElementById('playerO').style.color = "grey";
 				document.getElementById('playerO').style.setProperty("text-decoration", "line-through");
+				if(++LOSERS==2){
+					alert("You Win. Game Over.");
+				}
 				break;
 			case "V":
 				document.getElementById('playerV').style.color = "grey";
 				document.getElementById('playerV').style.setProperty("text-decoration", "line-through");
+				if(++LOSERS==2){
+					alert("You Win. Game Over.");
+				}
 				break;
 		}
 
@@ -550,7 +568,8 @@ function singleGameLoop(turnVal, index){
 									EARLIER_POS[0] = index
 									board[x][y]=0;
 									this.style.setProperty("color", "#21610B");
-									document.getElementById('x-score').innerHTML = parseInt(document.getElementById('x-score').innerHTML)+1;
+									xscore = parseInt(document.getElementById('x-score').innerHTML)+1;
+									document.getElementById('x-score').innerHTML = xscore;
 
 
 									break;
@@ -558,13 +577,15 @@ function singleGameLoop(turnVal, index){
 									EARLIER_POS[1] = index;
 									board[x][y]=1;
 									this.style.setProperty("color", "#8A0808");
-									document.getElementById('o-score').innerHTML = parseInt(document.getElementById('o-score').innerHTML)+1
+									oscore = parseInt(document.getElementById('o-score').innerHTML)+1;
+									document.getElementById('o-score').innerHTML = oscore;
 									break;
 								case "V":
 									EARLIER_POS[2] = index;
 									board[x][y]=2;
 									this.style.setProperty("color", "#3A01DF");
-									document.getElementById('v-score').innerHTML = parseInt(document.getElementById('v-score').innerHTML)+1
+									vscore = parseInt(document.getElementById('v-score').innerHTML)+1;
+									document.getElementById('v-score').innerHTML = vscore;
 									break;
 							}
 
@@ -604,8 +625,12 @@ $(document).ready(function() {
 		var player1 = "X";
 		var player2 = "O";
 		var player3 = "V";
-		agent_type = RANDOM_AGENT; 
 
+		//Find last game agent type
+		var retrieveAgentType = localStorage.getItem('agent_type');
+		agent_type = (retrieveAgentType==RANDOM_AGENT)?MODELLING_AGENT:RANDOM_AGENT;
+		localStorage.setItem('agent_type', agent_type);
+		console.log("Agent Type : ",agent_type);
 
 		var ret = singleGameLoop(player1,index);
 		//If user made a legal move
