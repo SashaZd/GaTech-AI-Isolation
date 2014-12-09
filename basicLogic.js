@@ -1,8 +1,30 @@
+
+
 // (in board) -1 :: Empty Space 
 // (-1) : Initial empty arrays 
 
-//////GLOBAL VARIABLES //////
+/////// SETUP DATABASE FOR RESULTS ///////
 
+var shortName = 'Isolation-Local'; 
+var version = '1.0'; 
+var displayName = 'Isolation-Local'; 
+var maxSize = 65535; 
+if (!window.openDatabase){ 
+     alert('!! Databases are not supported in this Device !! \n\n We are sorry for the inconvenience and are currently working on a version that will work on your phone'); 
+}
+db = openDatabase(shortName, version, displayName,maxSize);
+createAllTables(db);
+
+writeMovesToFile("New Game", "New Game");
+
+function createAllTables(db){
+    db.transaction(function(transaction){
+        transaction.executeSql("CREATE TABLE IF NOT EXISTS IsolationMoves(id INTEGER PRIMARY KEY AUTOINCREMENT,userEval TEXT, userModel TEXT)");
+	});
+}
+
+
+//////GLOBAL VARIABLES //////
 
 var RANDOM_AGENT = 0;
 var HEURISTIC_AGENT = 1;
@@ -323,9 +345,10 @@ function getNextIndexForPlayer(playerIndex){
 	var index = -1;
 	switch (agent_type){
 		case RANDOM_AGENT:
-		index = getIndexForRandomAgent(legalPositions);
+			index = getIndexForRandomAgent(legalPositions);
 			break;
 		case HEURISTIC_AGENT:
+			index = getIndexForHeuristicAgent(legalPositions);
 			break;
 		case MODELLING_AGENT:
 			index = getIndexForModellingAgent(legalPositions);
@@ -472,6 +495,26 @@ function evalValueForPosition(index, player){
 	return num_empty_board_positions + num_my_moves - num_their_moves;
 }
 
+function printMovesFromDb(){
+	db.transaction(function(transaction){
+        var rowCount = 'SELECT * FROM Profile';
+        transaction.executeSql(rowCount,[],function(transaction,result){
+            if(result.rows.length == 0){
+                console.log(result);
+            }
+        });
+    });
+}
+
+
+function writeMovesToFile(userEval, userModel) {
+	// localStorage.setItem("move", stringToWrite);
+
+	db.transaction(function(transaction){
+        transaction.executeSql("INSERT INTO IsolationMoves (userEval, userModel) VALUES('"+userEval+"','"+userModel+"')");
+	});
+}
+
 
 //Single player attempts to move to index
 function singleGameLoop(turnVal, index){
@@ -499,7 +542,10 @@ function singleGameLoop(turnVal, index){
 									//Update the player model
 									var userEval = evalValueForPosition(index,turnVal);
 									averageUserModel = (averageUserModel + userEval)/2;
-									console.log("X pics move with eval =", userEval, "ANGERAGE: ",averageUserModel);
+									
+									writeMovesToFile(userEval, averageUserModel);
+									//"X pics move with eval =", userEval, "ANGERAGE: ",averageUserModel);
+									
 									//Make the move
 									EARLIER_POS[0] = index
 									board[x][y]=0;
@@ -558,7 +604,7 @@ $(document).ready(function() {
 		var player1 = "X";
 		var player2 = "O";
 		var player3 = "V";
-		agent_type = RANDOM_AGENT;
+		agent_type = RANDOM_AGENT; 
 
 
 		var ret = singleGameLoop(player1,index);
@@ -575,8 +621,5 @@ $(document).ready(function() {
 				setTimeout(function(){ singleGameLoop(player3, next_index); }, 250);
 			}, 250);
 		}
-		
-
-		
 	});
 })
